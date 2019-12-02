@@ -39,23 +39,17 @@ class Place(object):
         There can be any number of Bees in a Place.
         """
         if insect.is_ant:
-            if self.ant is None:
+            if not self.ant:
                 self.ant = insect
             else:
                 # BEGIN Problem 9
-                if insect.is_container and not(self.ant.is_container):
-                    if insect.can_contain(self.ant):
-                        insect.contain_ant(self.ant)
-                        self.ant = insect
-                    else:
-                        assert insect.can_contain(self.ant), 'Two ants in {0}'.format(self)
-                elif self.ant.is_container and not(insect.is_container): #current ant can contain
-                    if self.ant.can_contain(insect):
-                        self.ant.contain_ant(insect)
-                    else:
-                        assert self.ant.can_contain(insect), 'Two ants in {0}'.format(self)
+                if insect.can_contain(self.ant):
+                    insect.contain_ant(self.ant)
+                    self.ant = insect
+                elif self.ant.can_contain(insect):
+                    self.ant.contain_ant(insect)
                 else:
-                    assert self.ant is None, 'Two ants in {0}'.format(self)
+                    assert not self.ant, 'Two ants in {0}'.format(self)
                 # END Problem 9
         else:
             self.bees.append(insect)
@@ -333,20 +327,13 @@ class FireAnt(Ant):
         # BEGIN Problem 5
         "*** YOUR CODE HERE ***"
         bees_list = list(self.place.bees)
-        self.armor -= amount
+        for copy_bee in bees_list:
+            for real_bee in self.place.bees:
+                if copy_bee == real_bee:
+                    hurt = (self.damage + amount) if (self.armor - amount <= 0) else amount
+                    real_bee.reduce_armor(hurt)
 
-        if self.armor <= 0:
-            for copy_bee in bees_list:
-                for real_bee in self.place.bees:
-                    if copy_bee == real_bee:
-                        real_bee.reduce_armor(self.damage + amount)
-            Insect.reduce_armor(self, 0)
-        else:
-            for copy_bee in bees_list:
-                for real_bee in self.place.bees:
-                    if copy_bee == real_bee:
-                        real_bee.reduce_armor(amount)
-
+        Ant.reduce_armor(self, amount)
 
         # END Problem 5
 
@@ -438,7 +425,7 @@ class BodyguardAnt(Ant):
     def can_contain(self, other):
         # BEGIN Problem 9
         "*** YOUR CODE HERE ***"
-        return not(other.is_container) and self.contained_ant == None
+        return not(other.is_container) and not self.contained_ant
         # END Problem 9
 
     def contain_ant(self, ant):
@@ -450,7 +437,7 @@ class BodyguardAnt(Ant):
     def action(self, colony):
         # BEGIN Problem 9
         "*** YOUR CODE HERE ***"
-        if self.contained_ant is not None:
+        if self.contained_ant:
             self.contained_ant.action(colony)
         # END Problem 9
 
